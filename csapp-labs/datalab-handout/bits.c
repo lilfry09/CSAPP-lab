@@ -156,7 +156,6 @@ int bitXor(int x, int y) {
  */
 int tmin(void) {
   
-
   return 1<<31;
 
 }
@@ -169,7 +168,12 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return ~(1<<31);
+  int plusone = x+1;
+  int checkequal = x ^ (~plusone);//if equal =0
+  int notminusone = !! plusone;// 我们用 !!plusOne，如果 plusOne 是 0 则得到 0，否则得到 1
+  return (!checkequal) & notminusone;
+
+
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -184,7 +188,7 @@ int isTmax(int x) {
 int allOddBits(int x) {
   int mask = 0xAA;
   mask = mask | (mask<<8);
-  mask = mask | (mask<<8);
+  mask = mask | (mask<<16);
   return !((x&mask) ^ mask);//如果 check ^ mask 的结果是 0，说明它们完全相等。
 //最后用逻辑非 ! 把 0 变成 1 即可。
 }
@@ -209,9 +213,13 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
-}
-/* 
+  int checklower = x + (~0x30+1);
+  int checkupper = 0x39 + (~x+1);
+
+  return !((checklower >> 31) | (checkupper >> 31));
+}// (checkUpper >> 31) 如果是 1，说明 x > 0x39
+//(checkLower >> 31) 如果是 1，说明 x < 0x30
+/* 如果 x 不是 0，返回 y。
  * conditional - same as x ? y : z 
  *   Example: conditional(2,4,5) = 4
  *   Legal ops: ! ~ & ^ | + << >>
@@ -219,8 +227,14 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  int isNonZero = !!x;// x 是 0，!!x 是 0。
+  //  // 如果 isNonZero 为 1，mask = -1 (即 0xFFFFFFFF)
+  // 如果 isNonZero 为 0，mask = 0  (即 0x00000000)  
+  int mask = ~isNonZero + 1;
+//mask 是全 1
+  return (mask&y)|(~mask&z);
 }
+
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
  *   Example: isLessOrEqual(4,5) = 1.
@@ -229,7 +243,13 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+  int signx = (x>>31) & 1;
+  int signy = (y>>31) & 1;
+  int samesign = !(signx ^ signy); //1=same sign
+  int sub = y+(~x+1);
+  int signsub = (sub>>31) & 1;// 1 = - , 0 = +
+
+  return ((!samesign) & signx) | (samesign & (!signsub));
 }
 //4
 /* 
@@ -241,7 +261,12 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+  
+  int y = ~x + 1;
+  int combine = x | y;
+  int sign = combine >> 31;
+  return sign+1;
+
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -255,6 +280,7 @@ int logicalNeg(int x) {
  *  Max ops: 90
  *  Rating: 4
  */
+
 int howManyBits(int x) {
   return 0;
 }
